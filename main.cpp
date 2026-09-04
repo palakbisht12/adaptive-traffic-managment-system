@@ -1,199 +1,579 @@
-#include <iostream>
 #include "traffic.h"
+#include <iostream>
 
 using namespace std;
 
-int main()
-{
-    TrafficState state;
-    ControllerConfig config;
-    vector<LogEntry> logs;
 
-    // Create roads
-    for (string road : ROAD_NAMES)
+
+Vehicle::Vehicle(VehicleType type)
+{
+    this->type = type;
+}
+
+
+VehicleType Vehicle::getType() const
+{
+    return type;
+}
+
+
+bool Vehicle::isEmergency() const
+{
+    return type == VehicleType::AMBULANCE;
+}
+
+
+
+Road::Road(string name)
+{
+    this->name = name;
+
+    waitTime = 0;
+    signalState = "red";
+    remaining = 0;
+}
+
+
+
+void Road::addVehicle(VehicleType type)
+{
+    Vehicle vehicle(type);
+
+    vehicles.push_back(vehicle);
+}
+
+
+
+void Road::removeVehicle()
+{
+    if (!vehicles.empty())
     {
-        state.roads[road] = RoadState();
+        vehicles.pop_back();
+
+        if (vehicles.empty())
+        {
+            waitTime = 0;
+        }
+    }
+}
+
+
+
+void Road::increaseWaitingTime()
+{
+    if (!vehicles.empty())
+    {
+        waitTime += 10;
+    }
+}
+
+
+
+void Road::processGreenSignal()
+{
+    if (!vehicles.empty())
+    {
+        // One vehicle passes through the green signal
+        vehicles.erase(vehicles.begin());
+
+        // Reduce waiting time
+        if (waitTime >= 10)
+        {
+            waitTime -= 10;
+        }
     }
 
-    int choice;
-
-    do
+    // Reset waiting time if no vehicles remain
+    if (vehicles.empty())
     {
-        cout << "\n====================================\n";
-        cout << "   ADAPTIVE TRAFFIC MANAGEMENT\n";
-        cout << "====================================\n";
+        waitTime = 0;
+    }
+}
 
-        cout << "1. Add Car\n";
-        cout << "2. Remove Car\n";
-        cout << "3. Send Ambulance\n";
-        cout << "4. Show Traffic Status\n";
-        cout << "5. Run Traffic Cycle\n";
-        cout << "6. Show Statistics\n";
-        cout << "0. Exit\n";
 
-        cout << "\nEnter your choice: ";
-        cin >> choice;
+// -----------------------------------------------------
+// GET ROAD NAME
+// -----------------------------------------------------
 
-        if (choice == 1)
+string Road::getName() const
+{
+    return name;
+}
+
+
+int Road::getVehicleCount() const
+{
+    return static_cast<int>(vehicles.size());
+}
+
+
+
+int Road::getWaitTime() const
+{
+    return waitTime;
+}
+
+
+
+bool Road::hasEmergency() const
+{
+    for (const Vehicle& vehicle : vehicles)
+    {
+        if (vehicle.isEmergency())
         {
-            int roadChoice;
-
-            cout << "\nSelect Road:\n";
-            cout << "1. Road A\n";
-            cout << "2. Road B\n";
-            cout << "3. Road C\n";
-            cout << "4. Road D\n";
-
-            cout << "Enter road number: ";
-            cin >> roadChoice;
-
-            if (roadChoice >= 1 && roadChoice <= 4)
-            {
-                string road = ROAD_NAMES[roadChoice - 1];
-
-                addVehicle(state, road, VehicleType::CAR);
-
-                cout << "Car added to " << road << endl;
-            }
-            else
-            {
-                cout << "Invalid road!\n";
-            }
+            return true;
         }
+    }
 
-        else if (choice == 2)
+    return false;
+}
+
+
+string Road::getSignalState() const
+{
+    return signalState;
+}
+
+
+
+int Road::getRemaining() const
+{
+    return remaining;
+}
+
+
+void Road::setSignalState(string state)
+{
+    signalState = state;
+}
+
+
+void Road::setRemaining(int time)
+{
+    remaining = time;
+}
+
+
+TrafficController::TrafficController()
+{
+    // Default configuration is automatically used.
+}
+
+
+
+Decision TrafficController::makeDecision(
+    const vector<Road>& roads) const
+{
+    Decision decision;
+
+    double highestScore = -1;
+
+
+
+
+    for (const Road& road : roads)
+    {
+        if (road.hasEmergency())
         {
-            int roadChoice;
+            decision.roadName = road.getName();
 
-            cout << "\nSelect Road:\n";
-            cout << "1. Road A\n";
-            cout << "2. Road B\n";
-            cout << "3. Road C\n";
-            cout << "4. Road D\n";
+            decision.isEmergency = true;
 
-            cout << "Enter road number: ";
-            cin >> roadChoice;
+            decision.greenDuration = config.maxGreen;
 
-            if (roadChoice >= 1 && roadChoice <= 4)
-            {
-                string road = ROAD_NAMES[roadChoice - 1];
-
-                removeVehicle(state, road);
-
-                cout << "Car removed from " << road << endl;
-            }
-            else
-            {
-                cout << "Invalid road!\n";
-            }
+            return decision;
         }
+    }
 
-        else if (choice == 3)
+
+
+    for (const Road& road : roads)
+    {
+        double score =
+            road.getVehicleCount() * config.densityWeight
+            +
+            road.getWaitTime() * config.waitWeight;
+
+
+        if (score > highestScore)
         {
-            int roadChoice;
+            highestScore = score;
 
-            cout << "\nAmbulance Road:\n";
-            cout << "1. Road A\n";
-            cout << "2. Road B\n";
-            cout << "3. Road C\n";
-            cout << "4. Road D\n";
-
-            cout << "Enter road number: ";
-            cin >> roadChoice;
-
-            if (roadChoice >= 1 && roadChoice <= 4)
-            {
-                string road = ROAD_NAMES[roadChoice - 1];
-
-                sendAmbulance(state, road);
-
-                cout << "Ambulance sent to " << road << endl;
-            }
-            else
-            {
-                cout << "Invalid road!\n";
-            }
+            decision.roadName = road.getName();
         }
+    }
 
-        else if (choice == 4)
+
+
+    if (highestScore <= 0)
+    {
+        decision.roadName = "";
+
+        decision.greenDuration = 0;
+
+        return decision;
+    }
+
+
+
+    decision.greenDuration =
+        config.minGreen +
+        static_cast<int>(highestScore);
+
+
+    // Minimum green time
+
+    if (decision.greenDuration < config.minGreen)
+    {
+        decision.greenDuration = config.minGreen;
+    }
+
+
+    // Maximum green time
+
+    if (decision.greenDuration > config.maxGreen)
+    {
+        decision.greenDuration = config.maxGreen;
+    }
+
+
+    return decision;
+}
+
+
+
+void TrafficController::updateSignals(
+    vector<Road>& roads,
+    const Decision& decision) const
+{
+    for (Road& road : roads)
+    {
+        if (road.getName() == decision.roadName)
         {
-            cout << "\n========== TRAFFIC STATUS ==========\n";
+            road.setSignalState("green");
 
-            for (string road : ROAD_NAMES)
-            {
-                RoadState r = state.roads[road];
-
-                cout << "\n" << road << endl;
-                cout << "Vehicles: " << r.count << endl;
-                cout << "Waiting Time: " << r.waitTime << " seconds" << endl;
-                cout << "Signal: " << r.signalState << endl;
-
-                if (r.hasEmergency)
-                {
-                    cout << "Emergency: YES" << endl;
-                }
-                else
-                {
-                    cout << "Emergency: NO" << endl;
-                }
-            }
+            road.setRemaining(decision.greenDuration);
         }
-
-        else if (choice == 5)
-        {
-            Decision decision = makeDecision(state, config);
-
-            if (decision.roadName != "")
-            {
-                updateSignals(state, decision);
-
-                updateWaitingTime(state);
-
-                state.cyclesRun++;
-
-                cout << "\nTraffic cycle completed.\n";
-                cout << "Active Road: " << decision.roadName << endl;
-                cout << "Green Duration: "
-                     << decision.greenDuration
-                     << " seconds\n";
-
-                if (decision.isEmergency)
-                {
-                    cout << "Emergency priority given!\n";
-                }
-            }
-            else
-            {
-                cout << "\nNo vehicles or emergency found.\n";
-            }
-        }
-
-        else if (choice == 6)
-        {
-            SimulationStats stats = getStatistics(state);
-
-            cout << "\n========== STATISTICS ==========\n";
-            cout << "Total Vehicles: "
-                 << stats.totalVehicles << endl;
-
-            cout << "Cycles Run: "
-                 << stats.cyclesRun << endl;
-
-            cout << "Active Road: "
-                 << stats.activeRoadLabel << endl;
-        }
-
-        else if (choice == 0)
-        {
-            cout << "\nExiting program...\n";
-        }
-
         else
         {
-            cout << "\nInvalid choice!\n";
+            road.setSignalState("red");
+
+            road.setRemaining(0);
         }
+    }
+}
 
-    } while (choice != 0);
 
-    return 0;
+
+TrafficSystem::TrafficSystem()
+{
+    roads.push_back(Road("Road A"));
+    roads.push_back(Road("Road B"));
+    roads.push_back(Road("Road C"));
+    roads.push_back(Road("Road D"));
+
+    activeRoad = "";
+
+    cyclesRun = 0;
+}
+
+
+void TrafficSystem::addVehicle(
+    string roadName,
+    VehicleType type)
+{
+    for (Road& road : roads)
+    {
+        if (road.getName() == roadName)
+        {
+            road.addVehicle(type);
+
+
+            LogEntry entry;
+
+
+            if (type == VehicleType::AMBULANCE)
+            {
+                entry.message =
+                    "Ambulance added to " + roadName;
+
+                entry.category = "emergency";
+            }
+            else
+            {
+                entry.message =
+                    "Car added to " + roadName;
+
+                entry.category = "info";
+            }
+
+
+            logs.push_back(entry);
+
+
+            // IMPORTANT:
+            // Immediately recalculate signal
+            refreshSignals();
+
+
+            return;
+        }
+    }
+}
+
+
+
+void TrafficSystem::removeVehicle(string roadName)
+{
+    for (Road& road : roads)
+    {
+        if (road.getName() == roadName)
+        {
+            road.removeVehicle();
+
+
+            LogEntry entry;
+
+            entry.message =
+                "Vehicle removed from " + roadName;
+
+            entry.category = "info";
+
+
+            logs.push_back(entry);
+
+
+            // Recalculate signal
+            refreshSignals();
+
+
+            return;
+        }
+    }
+}
+
+
+
+
+void TrafficSystem::sendAmbulance(string roadName)
+{
+    for (Road& road : roads)
+    {
+        if (road.getName() == roadName)
+        {
+            road.addVehicle(VehicleType::AMBULANCE);
+
+
+            LogEntry entry;
+
+            entry.message =
+                "Emergency ambulance sent to " + roadName;
+
+            entry.category = "emergency";
+
+
+            logs.push_back(entry);
+
+
+            // Immediately give emergency priority
+            refreshSignals();
+
+
+            return;
+        }
+    }
+}
+
+
+// =====================================================
+// REFRESH SIGNALS
+// =====================================================
+
+void TrafficSystem::refreshSignals()
+{
+    // Ask controller for the best road
+    Decision decision =
+        controller.makeDecision(roads);
+
+
+    // Update all traffic signals
+    controller.updateSignals(
+        roads,
+        decision);
+
+
+    // Store active road
+    activeRoad = decision.roadName;
+}
+
+
+void TrafficSystem::runCycle()
+{
+  
+
+    Decision decision =
+        controller.makeDecision(roads);
+
+
+   
+
+    controller.updateSignals(
+        roads,
+        decision);
+
+
+   
+
+    activeRoad =
+        decision.roadName;
+
+
+    
+
+    for (Road& road : roads)
+    {
+        if (road.getName() == activeRoad)
+        {
+            // One vehicle passes
+            road.processGreenSignal();
+        }
+        else
+        {
+            // Red roads wait
+            road.increaseWaitingTime();
+        }
+    }
+
+
+    cyclesRun++;
+
+
+
+    Decision nextDecision =
+        controller.makeDecision(roads);
+
+
+    controller.updateSignals(
+        roads,
+        nextDecision);
+
+
+    activeRoad =
+        nextDecision.roadName;
+
+
+    LogEntry entry;
+
+
+    if (activeRoad != "")
+    {
+        entry.message =
+            activeRoad +
+            " received GREEN signal for " +
+            to_string(nextDecision.greenDuration) +
+            " seconds.";
+
+
+        if (nextDecision.isEmergency)
+        {
+            entry.category = "emergency";
+        }
+        else
+        {
+            entry.category = "info";
+        }
+    }
+    else
+    {
+        entry.message =
+            "No traffic detected.";
+
+        entry.category = "info";
+    }
+
+
+    logs.push_back(entry);
+}
+
+
+
+SimulationStats TrafficSystem::getStatistics() const
+{
+    SimulationStats stats;
+
+
+    stats.cyclesRun =
+        cyclesRun;
+
+
+    if (activeRoad == "")
+    {
+        stats.activeRoadLabel = "-";
+    }
+    else
+    {
+        stats.activeRoadLabel =
+            activeRoad;
+    }
+
+
+    for (const Road& road : roads)
+    {
+        stats.totalVehicles +=
+            road.getVehicleCount();
+    }
+
+
+    return stats;
+}
+
+
+
+void TrafficSystem::showRoads() const
+{
+    cout << "\n========== TRAFFIC STATUS ==========\n";
+
+
+    for (const Road& road : roads)
+    {
+        cout
+            << road.getName()
+
+            << " | Vehicles: "
+            << road.getVehicleCount()
+
+            << " | Waiting: "
+            << road.getWaitTime()
+            << " sec"
+
+            << " | Emergency: "
+            << (road.hasEmergency()
+                ? "YES"
+                : "NO")
+
+            << " | Signal: "
+            << road.getSignalState()
+
+            << " | Remaining: "
+            << road.getRemaining()
+            << " sec\n";
+    }
+}
+
+
+
+void TrafficSystem::showLogs() const
+{
+    cout << "\n========== SYSTEM LOGS ==========\n";
+
+
+    for (const LogEntry& log : logs)
+    {
+        cout
+            << "["
+            << log.category
+            << "] "
+            << log.message
+            << endl;
+    }
 }
