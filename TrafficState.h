@@ -1,16 +1,13 @@
-#ifndef TRAFFIC_STATE_H
-#define TRAFFIC_STATE_H
+#ifndef TRAFFIC_H
+#define TRAFFIC_H
 
 #include <string>
-#include <map>
 #include <vector>
 
 using namespace std;
 
 
-// --------------------
-// Vehicle Types
-// --------------------
+
 
 enum class VehicleType
 {
@@ -19,52 +16,52 @@ enum class VehicleType
 };
 
 
-// --------------------
-// Actions
-// --------------------
-
-enum class ActionType
+class Vehicle
 {
-    ADD_CAR,
-    REMOVE_CAR,
-    SEND_AMBULANCE
+private:
+    VehicleType type;
+
+public:
+    Vehicle(VehicleType type);
+
+    VehicleType getType() const;
+    bool isEmergency() const;
 };
 
 
-// --------------------
-// Road Information
-// --------------------
 
-struct RoadState
+class Road
 {
-    int count = 0;
-    int waitTime = 0;
+private:
+    string name;
+    vector<Vehicle> vehicles;
 
-    bool hasEmergency = false;
+    int waitTime;
+    string signalState;
+    int remaining;
 
-    string signalState = "red";
+public:
+    Road(string name);
 
-    int remaining = 0;
+    void addVehicle(VehicleType type);
+    void removeVehicle();
+
+    void increaseWaitingTime();
+    void processGreenSignal();
+
+    string getName() const;
+    int getVehicleCount() const;
+    int getWaitTime() const;
+
+    bool hasEmergency() const;
+
+    string getSignalState() const;
+    int getRemaining() const;
+
+    void setSignalState(string state);
+    void setRemaining(int time);
 };
 
-
-// --------------------
-// Complete Traffic State
-// --------------------
-
-struct TrafficState
-{
-    map<string, RoadState> roads;
-
-    string activeRoad = "";
-
-    int cyclesRun = 0;
-};
-
-
-// --------------------
-// Controller Settings
-// --------------------
 
 struct ControllerConfig
 {
@@ -76,117 +73,80 @@ struct ControllerConfig
 };
 
 
-// --------------------
-// Traffic Decision
-// --------------------
 
 struct Decision
 {
     string roadName = "";
-
     bool isEmergency = false;
-
     int greenDuration = 0;
 };
 
 
-// --------------------
-// Log Information
-// --------------------
 
 struct LogEntry
 {
-    string timestamp = "";
-
     string message = "";
-
     string category = "info";
 };
 
 
-// --------------------
-// Simulation Statistics
-// --------------------
 
 struct SimulationStats
 {
     int totalVehicles = 0;
-
     int cyclesRun = 0;
-
     string activeRoadLabel = "-";
 };
 
 
-// --------------------
-// User Action
-// --------------------
 
-struct UserAction
+class TrafficController
 {
-    string roadName = "";
+private:
+    ControllerConfig config;
 
-    ActionType action = ActionType::ADD_CAR;
+public:
+    TrafficController();
 
-    VehicleType vehicleType = VehicleType::CAR;
+    Decision makeDecision(const vector<Road>& roads) const;
+
+    void updateSignals(
+        vector<Road>& roads,
+        const Decision& decision) const;
 };
 
 
-// --------------------
-// Road Names
-// --------------------
 
-const vector<string> ROAD_NAMES =
+class TrafficSystem
 {
-    "Road A",
-    "Road B",
-    "Road C",
-    "Road D"
+private:
+    vector<Road> roads;
+
+    TrafficController controller;
+
+    vector<LogEntry> logs;
+
+    string activeRoad;
+
+    int cyclesRun;
+
+public:
+    TrafficSystem();
+
+    void addVehicle(string roadName, VehicleType type);
+    void removeVehicle(string roadName);
+    void sendAmbulance(string roadName);
+
+    
+    void refreshSignals();
+
+    // Run one simulation cycle
+    void runCycle();
+
+    SimulationStats getStatistics() const;
+
+    void showRoads() const;
+    void showLogs() const;
 };
-
-
-// ==================================================
-// FUNCTION DECLARATIONS
-// ==================================================
-
-// Vehicle management
-void addVehicle(TrafficState& state, string roadName, VehicleType type);
-
-void removeVehicle(TrafficState& state, string roadName);
-
-
-// Emergency management
-void sendAmbulance(TrafficState& state, string roadName);
-
-
-// Traffic decision
-Decision makeDecision(
-    const TrafficState& state,
-    const ControllerConfig& config
-);
-
-
-// Signal management
-void updateSignals(
-    TrafficState& state,
-    const Decision& decision
-);
-
-
-// Waiting time
-void updateWaitingTime(TrafficState& state);
-
-
-// Statistics
-SimulationStats getStatistics(const TrafficState& state);
-
-
-// Logging
-void addLog(
-    vector<LogEntry>& logs,
-    string message,
-    string category
-);
-
 
 #endif
