@@ -385,26 +385,33 @@ cd adaptive-traffic-managment-system
 
 ### 3. Compile the Application
 
+Each command below is a **single line**. Do not split it across lines — the
+backslash continuation used in Linux shells is not valid in Windows PowerShell.
+
+**Windows (PowerShell)**
+
+```powershell
+g++ -std=c++17 -Iinclude src/main.cpp include/PriorityManager.cpp include/TrafficManager.cpp include/TrafficSimulation.cpp -o traffic_app.exe
+```
+
+**Linux / macOS**
+
 ```bash
-g++ -std=c++17 -Iinclude src/main.cpp \
-    include/PriorityManager.cpp \
-    include/TrafficManager.cpp \
-    include/TrafficSimulation.cpp \
-    -o traffic_app
+g++ -std=c++17 -Iinclude src/main.cpp include/PriorityManager.cpp include/TrafficManager.cpp include/TrafficSimulation.cpp -o traffic_app
 ```
 
 ### 4. Run the Application
+
+**Windows (PowerShell)**
+
+```powershell
+.\traffic_app.exe
+```
 
 **Linux / macOS**
 
 ```bash
 ./traffic_app
-```
-
-**Windows**
-
-```powershell
-.\traffic_app.exe
 ```
 
 ---
@@ -415,17 +422,25 @@ Testing covers traffic selection, emergency handling, fairness, road management 
 
 ### Main Test Suite
 
-Compile:
+Compile — **Windows (PowerShell)**:
 
-```bash
-g++ -std=c++17 -Iinclude test/test.cpp \
-    include/PriorityManager.cpp \
-    include/TrafficManager.cpp \
-    include/TrafficSimulation.cpp \
-    -o tests
+```powershell
+g++ -std=c++17 -Iinclude test/test.cpp include/PriorityManager.cpp include/TrafficManager.cpp include/TrafficSimulation.cpp -o tests.exe
 ```
 
-Run:
+Compile — **Linux / macOS**:
+
+```bash
+g++ -std=c++17 -Iinclude test/test.cpp include/PriorityManager.cpp include/TrafficManager.cpp include/TrafficSimulation.cpp -o tests
+```
+
+Run — **Windows (PowerShell)**:
+
+```powershell
+.\tests.exe
+```
+
+Run — **Linux / macOS**:
 
 ```bash
 ./tests
@@ -460,24 +475,26 @@ The `test/` directory contains 16 programs. Three of them assert and report pass
 
 The remaining **13 print output for manual inspection** rather than asserting. Converting them is listed under Future Roadmap.
 
-The same three `.cpp` implementation files link every test program. Substitute the test filename when compiling another test:
+The same three `.cpp` implementation files link every test program. Substitute the
+test filename when compiling another one.
 
-```bash
-g++ -std=c++17 -Iinclude test/<test_file>.cpp \
-    include/PriorityManager.cpp \
-    include/TrafficManager.cpp \
-    include/TrafficSimulation.cpp \
-    -o test_program
+**Windows (PowerShell)**
+
+```powershell
+g++ -std=c++17 -Iinclude test/<test_file>.cpp include/PriorityManager.cpp include/TrafficManager.cpp include/TrafficSimulation.cpp -o test_program.exe
 ```
 
-For example:
+**Linux / macOS**
 
 ```bash
-g++ -std=c++17 -Iinclude test/emergency_test.cpp \
-    include/PriorityManager.cpp \
-    include/TrafficManager.cpp \
-    include/TrafficSimulation.cpp \
-    -o emergency_test
+g++ -std=c++17 -Iinclude test/<test_file>.cpp include/PriorityManager.cpp include/TrafficManager.cpp include/TrafficSimulation.cpp -o test_program
+```
+
+For example, to build and run `emergency_queue_order_test.cpp` on Windows:
+
+```powershell
+g++ -std=c++17 -Iinclude test/emergency_queue_order_test.cpp include/PriorityManager.cpp include/TrafficManager.cpp include/TrafficSimulation.cpp -o emergency_queue_order_test.exe
+.\emergency_queue_order_test.exe
 ```
 
 ---
