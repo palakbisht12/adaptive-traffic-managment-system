@@ -1,0 +1,36 @@
+
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "build app",
+            "command": "C:\\MinGW\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-std=c++17",
+                "-Wall",
+                "-I",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src/main.cpp",
+                "${workspaceFolder}/include/TrafficSimulation.cpp",
+                "${workspaceFolder}/include/TrafficManager.cpp",
+                "${workspaceFolder}/include/PriorityManager.cpp",
+                "-o",
+                "${workspaceFolder}/app.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Builds the traffic management application"
+        }
+    ]
+}
