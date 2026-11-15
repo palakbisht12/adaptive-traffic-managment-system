@@ -6,7 +6,7 @@ A collaborative software engineering project developed by all four team members.
 
 <p align="center">
   <img src="https://img.shields.io/badge/C%2B%2B-17-blue?style=for-the-badge&logo=c%2B%2B" alt="C++17" />
-  <img src="https://img.shields.io/badge/Tests-206%2F206%20passing-brightgreen?style=for-the-badge" alt="206 of 206 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-206%20Assertions-brightgreen?style=for-the-badge" alt="206 assertions" />
   <img src="https://img.shields.io/badge/Dependencies-none-orange?style=for-the-badge" alt="No external dependencies for default build" />
 </p>
 
@@ -14,16 +14,18 @@ A collaborative software engineering project developed by all four team members.
 
 ## 👥 Project Development
 
-**The Adaptive Traffic Management System is a collaborative project developed by all four team members.**
+The Adaptive Traffic Management System is a collaborative project developed by all four team members.
 
-All four members contributed to the design, development, implementation, integration, and testing of their respective modules.
+Each member was responsible for the design, development, and implementation of their respective module. All four modules were integrated to build the complete application.
 
-- **Member 1** — Traffic Intelligence
-- **Member 2** — Database Management
-- **Member 3** — Frontend Development
-- **Member 4** — System Integration and REST API
+The project combines:
 
-Each member was responsible for developing a dedicated module. All four modules were integrated to create one complete traffic management application.
+- Traffic Intelligence and Decision Making
+- Database Management and Data Persistence
+- Frontend Development and Visualization
+- Backend Integration and REST API
+
+Every module contributes to the functionality of the final system. The project represents the combined work and contributions of all four team members.
 
 ---
 
@@ -33,9 +35,9 @@ Each member was responsible for developing a dedicated module. All four modules 
 - [Quick Start](#-quick-start)
 - [System Architecture](#-system-architecture)
 - [Module 1 — Traffic Intelligence](#-module-1--traffic-intelligence)
-- [Module 2 — Database](#-module-2--database)
-- [Module 3 — Frontend](#-module-3--frontend)
-- [Module 4 — Integration and API](#-module-4--integration-and-api)
+- [Module 2 — Database Management](#-module-2--database-management)
+- [Module 3 — Frontend Development](#-module-3--frontend-development)
+- [Module 4 — System Integration and API](#-module-4--system-integration-and-api)
 - [API Reference](#-api-reference)
 - [Testing](#-testing)
 - [Project Structure](#-project-structure)
@@ -48,11 +50,15 @@ Each member was responsible for developing a dedicated module. All four modules 
 
 ## 🌍 What It Does
 
-A fixed-time traffic signal gives every road the same green period regardless of what is happening on it. An empty street gets sixty seconds while a queue builds beside it, and an ambulance waits for a timer.
+Traditional traffic signals use fixed timings regardless of the actual traffic conditions on each road.
 
-This system replaces the fixed timer with an intelligent decision-making mechanism.
+An empty road may receive a long GREEN signal while another road experiences heavy congestion. Emergency vehicles may also have to wait for the signal cycle to finish.
 
-Every cycle, the system evaluates each road using:
+This system uses an adaptive traffic management approach.
+
+It evaluates the condition of each road and selects the road that needs GREEN the most.
+
+The system considers:
 
 - Vehicle count
 - Traffic density
@@ -60,21 +66,21 @@ Every cycle, the system evaluates each road using:
 - Emergency vehicle presence
 - Fairness between roads
 
-It then selects the road that needs GREEN the most and provides an explicit reason for its decision, which is displayed on the dashboard.
+It also provides an explanation for each traffic decision, which is displayed on the dashboard.
 
-### System workflow
+### System Workflow
 
 ```mermaid
 flowchart LR
-    A[Browser Dashboard] -->|Fetch JSON| B[HTTP Server]
+    A[Browser Dashboard] -->|HTTP Request| B[HTTP Server]
     B --> C[Request Handler]
     C --> D[API Router]
-    D --> E[Integration]
+    D --> E[System Integration]
     E --> F[Traffic Intelligence]
-    E --> G[Database]
-    F -->|Decision| E
-    G -->|History| E
-    E -->|Snapshot| D
+    E --> G[Database Management]
+    F -->|Traffic Decisions| E
+    G -->|Stored Records| E
+    E -->|JSON Response| D
     D --> A
 ```
 
@@ -84,8 +90,9 @@ flowchart LR
 
 ### Requirements
 
-- `g++` with C++17 support (MinGW on Windows)
-- A modern web browser
+- C++ compiler with C++17 support
+- MinGW on Windows or GCC on Linux/macOS
+- Modern web browser
 - No external libraries required for the default FileStorage build
 
 ### Build and Run
@@ -104,13 +111,11 @@ make run
 .\build.bat run
 ```
 
-PowerShell requires the `.\` prefix to execute a script from the current directory. In `cmd.exe`, the prefix is optional.
-
 After starting the server, open:
 
 **http://127.0.0.1:8080/**
 
-### Expected startup output
+### Expected Startup Output
 
 ```text
 ===========================================================
@@ -125,11 +130,13 @@ After starting the server, open:
 
 ### Try It
 
-1. Open the dashboard. Four roads load, and Saharanpur Road holds GREEN.
-2. Go to **Emergency**, select **Chakrata Road** (the quietest road), and press **Start emergency**.
-3. The signal switches to Chakrata Road with the reason **Emergency vehicle detected**. An ambulance on an empty street takes priority over a 75-vehicle jam.
-4. Press **Mark completed**. Control returns to normal traffic selection.
-5. Go back to **Dashboard**, enable **Auto-run**, and watch the roads take turns.
+1. Open the dashboard. Four roads are displayed.
+2. Navigate to the Emergency section.
+3. Select Chakrata Road and press Start Emergency.
+4. Observe the signal switching to Chakrata Road.
+5. The system displays the reason: Emergency vehicle detected.
+6. Press Mark Completed to finish the emergency event.
+7. Return to the Dashboard and enable Auto-run to observe traffic selection.
 
 ### Command-Line Options
 
@@ -140,8 +147,8 @@ After starting the server, open:
 | Flag | Meaning |
 |---|---|
 | `--port N` | Listening port (default 8080) |
-| `--data PATH` | Storage directory or `.db` file (default `traffic_data`) |
-| `--frontend DIR` | Dashboard directory (default `frontend`) |
+| `--data PATH` | Storage directory or `.db` file |
+| `--frontend DIR` | Dashboard directory |
 | `--no-seed` | Start without demo roads |
 | `--quiet` | Disable request logging |
 
@@ -155,34 +162,34 @@ On Windows:
 
 ## 🧱 System Architecture
 
-The project is divided into four modules, each with a specific responsibility.
+The application is divided into four modules. Each module has its own responsibilities and communicates with the other modules through defined interfaces.
 
 ```mermaid
 flowchart TB
-    subgraph M3["Member 3 — Frontend"]
+    subgraph M3["Module 3 — Frontend Development"]
         UI[index.html / styles.css / app.js]
     end
 
-    subgraph M4["Member 4 — Integration"]
+    subgraph M4["Module 4 — System Integration and API"]
         HS[HttpServer] --> RH[RequestHandler]
         RH --> AP[API Router]
         AP --> IN[Integration]
         EH[ErrorHandler]
-        SC[traffic.h Shared Contract]
+        SC[Shared Data Contract]
     end
 
-    subgraph M1["Member 1 — Traffic Intelligence"]
+    subgraph M1["Module 1 — Traffic Intelligence"]
         TM[TrafficManager] --> PM[PriorityManager]
         TM --> Q[VehicleQueue]
         TM --> HP[RoadHeap]
         TM --> HT[RoadHashTable]
     end
 
-    subgraph M2["Member 2 — Database"]
+    subgraph M2["Module 2 — Database Management"]
         DB[Database] --> IS[IStorage]
         IS --> FS[FileStorage]
         IS --> SQ[SqliteStorage]
-        DB --> RR[4 Repositories]
+        DB --> RR[Repositories]
     end
 
     UI -->|HTTP + JSON| HS
@@ -192,24 +199,26 @@ flowchart TB
 
 ### Module Responsibilities
 
-| Member | Module | Main Responsibility |
+| Module | Development Area | Main Responsibility |
 |---|---|---|
-| Member 1 | Traffic Intelligence | Calculates priority and selects roads |
-| Member 2 | Database | Stores traffic, signal and emergency records |
-| Member 3 | Frontend | Displays traffic information and provides user controls |
-| Member 4 | Integration | Connects modules through APIs and the HTTP server |
+| Module 1 | Traffic Intelligence | Traffic priority calculation, road selection, data structures and traffic simulation |
+| Module 2 | Database Management | Database design, storage implementation, repositories and data persistence |
+| Module 3 | Frontend Development | Dashboard, user interface, traffic visualization and user controls |
+| Module 4 | System Integration and API | Shared interfaces, REST API, HTTP server and integration of all modules |
 
-**Collaborative Development:** All four members contributed to developing their respective modules. Each module has a defined responsibility, and all four modules work together through the integrated system architecture.
+All four modules work together as one integrated system.
 
-The priority calculation exists in one place in the Traffic Intelligence module. The frontend does not independently calculate priority. It displays the values and explanations returned by the backend.
+The traffic decision logic is maintained in the Traffic Intelligence module. The frontend displays information received from the backend rather than independently calculating traffic priorities.
 
 ---
 
 ## 🧠 Module 1 — Traffic Intelligence
 
-**Responsible Member: Member 1**
+**Assigned Member: Member 1**
 
-The Traffic Intelligence module is the decision-making engine of the system. It manages roads, vehicles, queues, priority calculations, signal selection, and traffic simulation.
+The Traffic Intelligence module manages roads, vehicles, vehicle queues, traffic priority, signal selection and traffic simulation.
+
+It acts as the traffic decision-making component of the application.
 
 ### Priority Formula
 
@@ -235,15 +244,13 @@ priority = EMERGENCY_WEIGHT
 | `WAITING_WEIGHT` | 2 |
 | `FAIRNESS_WEIGHT` | 5 |
 
-### Why 1000 and Not 100?
+### Emergency Priority
 
-During development, the emergency weight was initially 100.
+Emergency vehicles receive significantly higher priority than normal traffic.
 
-An ambulance on a quiet road could receive a score of 103, while a heavily congested road could receive a higher score. This demonstrated that relying only on the numerical score could allow normal traffic to outrank an emergency.
+During development, the emergency weight was increased from 100 to 1000 because a normal congested road could otherwise receive a higher numerical score than a road containing an ambulance.
 
-Increasing the emergency weight to 1000 makes emergency priority much stronger.
-
-For example:
+Example:
 
 ```text
 Ambulance road:
@@ -253,84 +260,78 @@ Normal traffic road:
 60 × 2 + 100 × 1 + 60 × 2 = 340
 ```
 
-The ambulance receives the higher priority.
+The ambulance road receives the higher priority.
 
-Emergency handling is also structural: `selectNextRoad()` checks emergency roads in step 1, before normal score comparison. Therefore, emergency selection does not depend only on the priority formula.
+Emergency handling is also explicitly checked before normal priority comparison in `selectNextRoad()`.
 
 ### Selection Algorithm
 
 | Step | Rule |
 |---|---|
-| 1 | Emergency road wins; among several, the ambulance nearest the queue front |
-| 2 | Check whether demand exists on any road other than the last one served |
-| 3 | Fairness — after three consecutive greens, use round-robin selection for the next waiting road |
-| 4 | Otherwise, select the road with the highest priority score |
+| 1 | Check for emergency vehicles |
+| 2 | Check whether demand exists on other roads |
+| 3 | Apply fairness and round-robin selection when required |
+| 4 | Otherwise select the road with the highest priority score |
 
-Returns the selected road index, or `-1` if nothing can be served.
+The function returns the selected road index or `-1` if no road can be served.
 
 ### Data Structures and Algorithms
 
-| Structure | File | Complexity |
+| Data Structure / Algorithm | Implementation | Complexity |
 |---|---|---|
 | Linked Queue | `queue.h` | Enqueue/dequeue O(1), emergency extraction O(m) |
 | Binary Max Heap | `heap.h` | Insert O(log n), peek O(1) |
 | Hash Table | `hashtable.h` | O(1) average, O(n) worst |
-| Merge Sort | `sorting.h` | O(n log n) in all cases |
+| Merge Sort | `sorting.h` | O(n log n) |
 | Linear Search | `TrafficManager.cpp` | O(n) |
 
 ### Practical Application of DSA
 
-All five structures are used in actual system operations, not merely implemented for demonstration.
-
-| Structure | Used By | Purpose |
+| Structure | Application | Purpose |
 |---|---|---|
-| `RoadHashTable` | `findRoadIndex()` | O(1) average road lookup instead of a linear scan |
-| `RoadHeap` | `selectNextRoad()` | Selects the highest-priority road |
-| `RoadVehicleSearch` | `findVehiclePosition()` | Finds a vehicle's position in a road's queue |
-| `VehicleQueue` | TrafficManager | Maintains waiting vehicles and supports emergency extraction |
-| Merge Sort | Priority-ordered road reports | Sorts road reports by priority |
+| `RoadHashTable` | `findRoadIndex()` | Efficient road lookup |
+| `RoadHeap` | Road selection | Priority-based road selection |
+| `VehicleQueue` | Traffic management | Maintains vehicle arrival order |
+| `RoadVehicleSearch` | `findVehiclePosition()` | Searches for vehicles in queues |
+| Merge Sort | Road reports | Sorts roads by priority |
 
-Fifteen assertions under DSA integration verify that important data structures are used in the actual execution paths.
-
-Removing the hash-table rebuild in `removeRoad()` creates an index-invalidation bug. Removing a road shifts subsequent roads to different positions, so old hash-table indexes can point to the wrong road. The relevant integration tests detect this problem.
+These data structures are integrated into the actual traffic management operations.
 
 ---
 
-## 💾 Module 2 — Database
+## 💾 Module 2 — Database Management
 
-**Responsible Member: Member 2**
+**Assigned Member: Member 2**
 
-The Database module manages persistent storage and traffic records.
+The Database Management module handles persistent storage and maintains traffic-related records.
 
-It uses four tables and two interchangeable storage backends behind a common interface.
+It provides a common storage interface with two interchangeable backend implementations.
 
 ### Database Tables
 
-| Table | Stores |
+| Table | Purpose |
 |---|---|
-| `roads` | Current state of every road |
-| `traffic_history` | Records of traffic changes |
-| `signal_history` | Records of signal transitions |
-| `emergency_events` | Emergency start and completion events |
+| `roads` | Stores current road information |
+| `traffic_history` | Stores traffic changes |
+| `signal_history` | Stores signal transitions |
+| `emergency_events` | Stores emergency start and completion records |
 
-Full database definitions are available in:
+The database schema is available in:
 
 ```text
 database/schema.sql
 ```
 
-### Two Storage Backends
+### Storage Backends
 
 | Backend | Purpose | Requirements |
 |---|---|---|
-| **FileStorage** | Default storage backend | No additional dependencies |
-| **SqliteStorage** | SQLite-based persistent storage | `sqlite3.c` and `sqlite3.h` |
+| FileStorage | File-based persistent storage | No additional dependencies |
+| SqliteStorage | SQLite database storage | `sqlite3.c` and `sqlite3.h` |
 
-Both implement the `IStorage` interface.
+Both storage implementations follow the common `IStorage` interface.
 
-The same database test suite is designed to verify the storage operations through the common interface.
-
-See `database/README_SQLITE.md` for the SQLite setup instructions and the current testing caveat.
+This allows the application to use different storage backends without changing the overall database interaction structure.
 
 ### FileStorage Implementation
 
@@ -338,15 +339,7 @@ The file backend stores each database table in a separate text file.
 
 It uses `0x1F` (unit separator) between fields.
 
-This separator avoids conflicts with ordinary road names and does not require additional escaping rules for normal user-entered text.
-
-For example:
-
-```text
-Road ID: R101
-Road Name: Main Road, East
-Vehicle Count: 50
-```
+This avoids conflicts with ordinary road names and simplifies the storage format.
 
 ### Repository Pattern
 
@@ -357,15 +350,15 @@ The database provides four repositories:
 - `SignalRepository`
 - `EmergencyRepository`
 
-These repositories provide a convenient interface over the Database layer.
+Repositories provide a structured interface for accessing database operations.
 
-For example, callers can use:
+For example:
 
 ```cpp
 addRoad(...);
 ```
 
-instead of assembling low-level storage operations themselves.
+allows road insertion without requiring callers to directly manage low-level storage operations.
 
 ### Error Handling
 
@@ -380,22 +373,24 @@ Database operations return an `OperationResult` containing a message and an HTTP
 
 ---
 
-## 🌐 Module 3 — Frontend
+## 🌐 Module 3 — Frontend Development
 
-**Responsible Member: Member 3**
+**Assigned Member: Member 3**
 
-The Frontend module provides an interactive dashboard using:
+The Frontend Development module provides the interactive browser dashboard.
+
+It uses:
 
 - HTML
 - CSS
 - JavaScript
 - SVG
 
-No frontend framework, build step, or `node_modules` directory is required.
+No frontend framework, build step or `node_modules` directory is required.
 
 ### Main Dashboard
 
-The main screen provides a top-down live view of the traffic junction.
+The dashboard provides a visual representation of the traffic junction.
 
 It displays:
 
@@ -403,136 +398,108 @@ It displays:
 - Queued vehicles
 - Traffic signals
 - Zebra crossings
-- Per-road waiting times
+- Waiting times
 - Traffic priority
 - Current signal status
 
-The junction is rendered using SVG based on the information received from the backend.
+The junction is rendered using SVG based on information received from the backend.
 
 ### Dashboard Tabs
 
-| Tab | Specification | Features |
-|---|---|---|
-| **Live View** | 3.1, 3.4, 3.5, 3.6, 3.7 | Junction visualization, moving vehicles, traffic controls, priority and reason, simulation controls and cycle speed |
-| **Roads** | 3.2, 3.3 | Add, remove and update roads, inspect roads, search for vehicles |
-| **History** | — | Traffic, signal and emergency history |
+| Tab | Features |
+|---|---|
+| Live View | Junction visualization, moving vehicles, traffic controls, priority and decision reason |
+| Roads | Add, remove and update roads, inspect roads and search for vehicles |
+| History | Traffic history, signal history and emergency history |
 
-The dashboard polls:
+### Live Data Updates
+
+The frontend periodically requests the latest traffic information:
 
 ```http
 GET /api/traffic/state
 ```
 
-every 1.2 seconds and updates the interface.
+The dashboard polls the backend every 1.2 seconds and updates the displayed information.
 
-### Reading the Junction
+### Traffic Visualization
 
-Roads are mapped to compass directions according to the order in which the backend lists them:
-
-1. First road — North
-2. Second road — East
-3. Third road — South
-4. Fourth road — West
-
-Traffic keeps to the left in India, and the lane layout is arranged accordingly.
+Roads are displayed according to their positions in the junction.
 
 The visual queue is limited to seven vehicles per approach, with a `+N` indicator for additional vehicles.
 
-This keeps the junction readable while the side panel displays the actual vehicle count.
+This keeps the dashboard readable while the side panel displays the actual vehicle count.
 
-An active emergency vehicle is displayed in red at the front of its queue, matching the backend's emergency extraction behaviour.
+Emergency vehicles are visually highlighted in red.
 
-### Server-Side Simulation
+### Simulation Controls
 
-The traffic simulation runs on the server, not in the browser.
+The dashboard provides:
 
-`Start` changes the simulation state to RUNNING, and the server advances cycles according to `cycleIntervalMs`.
+- Start
+- Pause
+- Resume
+- Reset
+- Step
+- Auto-run
 
-The HTTP server uses `select()` with a 50 ms timeout so it can perform simulation work between incoming requests.
+The simulation runs on the server rather than independently in the browser.
 
-Simulation controls include:
+### Road Controls
 
-- **Start** — Starts the simulation.
-- **Pause** — Pauses automatic cycle execution.
-- **Resume** — Resumes automatic execution.
-- **Reset** — Resets the simulation.
-- **Step** — Executes exactly one traffic cycle.
+Users can:
 
-### Setting an Exact Vehicle Count
-
-Road Controls provide a typed number input between the `−` and `+` buttons.
-
-Users can enter an exact count and submit it using Enter.
-
-The frontend sends:
-
-```http
-PUT /api/road/{id}
-```
-
-This replaces the vehicle count directly instead of requiring repeated button clicks.
-
-Additional controls include:
-
+- Add new roads
+- Remove existing roads
+- Update vehicle counts
+- Change traffic density
+- Update waiting time
+- Search for vehicles
 - Empty all roads
 - Set one vehicle on each road
 
-The panel avoids rebuilding while an input field has focus, preventing periodic polling from overwriting unfinished user input.
+An exact vehicle count can be entered through a number input instead of repeatedly pressing increment or decrement buttons.
 
 ### Frontend Validation
 
 The frontend validates:
 
-- Empty road ID
-- Duplicate road ID
-- Empty road name
-- Non-numeric input
+- Empty road IDs
+- Duplicate road IDs
+- Empty road names
+- Non-numeric values
 - Negative vehicle counts
-- Traffic density outside 0–100
+- Traffic density outside the 0–100 range
 
 Validation errors are displayed near the relevant input fields.
 
-### No Duplicate Priority Logic
+### Separation of Responsibilities
 
-The frontend does not calculate traffic priority independently.
+The frontend is responsible for displaying traffic information and collecting user input.
 
-It displays the priority value and reason provided by the backend.
+Traffic decisions are provided by the Traffic Intelligence module through the integrated backend API.
 
-This maintains a single source of truth and prevents differences between the dashboard and the Traffic Intelligence engine.
-
-### Opening index.html Directly
-
-Opening `index.html` directly displays the frontend interface, but live traffic information requires the backend server.
-
-If the server is not running, the dashboard displays a warning.
-
-Asset paths are relative:
-
-```text
-styles.css
-```
-
-rather than absolute paths:
-
-```text
-/styles.css
-```
-
-This allows the files to load correctly when the page is opened directly from disk.
-
-User-supplied text is inserted using `textContent` rather than `innerHTML`, helping prevent HTML injection through road names or other text fields.
+This keeps traffic calculations and user-interface responsibilities separate.
 
 ---
 
-## 🔌 Module 4 — Integration and API
+## 🔌 Module 4 — System Integration and API
 
-**Responsible Member: Member 4**
+**Assigned Member: Member 4**
 
-The Integration module connects Traffic Intelligence, Database Management, and the Frontend.
+The System Integration and API module connects all the other modules and enables communication between the frontend, traffic engine and database.
 
-It provides the shared data contract, REST API, HTTP server, request handling, and synchronization.
+It includes:
 
-### Shared Contract
+- Shared data contract
+- REST API
+- HTTP server
+- Request handling
+- Error handling
+- Module communication
+- Data synchronization
+
+### Shared Data Contract
 
 The file:
 
@@ -540,7 +507,9 @@ The file:
 integration/traffic.h
 ```
 
-defines shared data structures:
+defines shared structures used for communication between modules.
+
+These include:
 
 - `RoadState`
 - `PriorityResult`
@@ -550,9 +519,7 @@ defines shared data structures:
 - `SimulationState`
 - `OperationResult`
 
-These are plain structures that establish a stable communication boundary between the modules.
-
-This allows each module to maintain its internal implementation while exchanging data through common structures.
+These structures establish a common communication format across the application.
 
 ### Request Pipeline
 
@@ -565,19 +532,19 @@ receive → validate → route → call module → persist → respond
 `RequestHandler` manages common request-processing responsibilities:
 
 - Request logging
-- Oversized request-body protection
+- Request-body size protection
 - Duplicate-request counting
 - Exception handling
 
-Unexpected exceptions are caught and converted into HTTP 500 responses rather than terminating the server.
+Unexpected exceptions are converted into HTTP 500 responses rather than terminating the server.
 
-### Synchronization
+### Data Synchronization
 
-Traffic Intelligence is the single source of truth for live traffic state, while the database maintains the persistent record.
+Traffic Intelligence maintains the current traffic state, while the database maintains persistent records.
 
-Every mutating operation synchronizes the manager's current road information with storage.
+Mutating operations synchronize the current road information with storage.
 
-Live traffic decisions are obtained from Traffic Intelligence rather than reconstructed from historical database records.
+Live traffic decisions are obtained from the Traffic Intelligence module rather than reconstructed from historical database records.
 
 ### HTTP Server
 
@@ -588,7 +555,7 @@ The HTTP server is implemented using raw sockets:
 
 The server is single-threaded by design.
 
-`TrafficManager` is not thread-safe, so handling one request at a time avoids concurrent access and data races without introducing unnecessary locking complexity.
+`TrafficManager` is not thread-safe, so processing one request at a time avoids concurrent access and data races without requiring additional locking complexity.
 
 The server binds to:
 
@@ -600,55 +567,55 @@ The server binds to:
 
 ## 📡 API Reference
 
-The REST API provides endpoints for road management, traffic updates, emergency handling, simulation controls, and history retrieval.
+The REST API provides endpoints for road management, traffic updates, emergency handling, simulation controls and history retrieval.
 
 ### Road Management
 
 | Method | Endpoint | Body / Query |
 |---|---|---|
-| `GET` | `/api/health` | — |
-| `GET` | `/api/roads` | — |
-| `GET` | `/api/road/{id}` | — |
-| `POST` | `/api/road` | `{roadID, roadName, vehicleCount, trafficDensity, waitingTime}` |
-| `PUT` | `/api/road/{id}` | `{vehicleCount, trafficDensity, waitingTime}` |
-| `DELETE` | `/api/road/{id}` | — |
+| GET | `/api/health` | — |
+| GET | `/api/roads` | — |
+| GET | `/api/road/{id}` | — |
+| POST | `/api/road` | `{roadID, roadName, vehicleCount, trafficDensity, waitingTime}` |
+| PUT | `/api/road/{id}` | `{vehicleCount, trafficDensity, waitingTime}` |
+| DELETE | `/api/road/{id}` | — |
 
 ### Traffic Management
 
 | Method | Endpoint | Body / Query |
 |---|---|---|
-| `POST` | `/api/traffic/update` | `{roadID, addVehicles, removeVehicles, trafficDensity, waitingTime}` |
-| `GET` | `/api/traffic/state` | Roads, decision and simulation state |
-| `GET` | `/api/priority` | — |
-| `POST` | `/api/cycle` | Advance one traffic cycle |
+| POST | `/api/traffic/update` | `{roadID, addVehicles, removeVehicles, trafficDensity, waitingTime}` |
+| GET | `/api/traffic/state` | Roads, decision and simulation state |
+| GET | `/api/priority` | — |
+| POST | `/api/cycle` | Advance one traffic cycle |
 
 ### Emergency Management
 
 | Method | Endpoint | Body |
 |---|---|---|
-| `POST` | `/api/emergency/start` | `{roadID, type}` |
-| `POST` | `/api/emergency/end` | `{roadID}` |
+| POST | `/api/emergency/start` | `{roadID, type}` |
+| POST | `/api/emergency/end` | `{roadID}` |
 
 ### Simulation Controls
 
 | Method | Endpoint | Body |
 |---|---|---|
-| `POST` | `/api/simulation/start` | — |
-| `POST` | `/api/simulation/pause` | — |
-| `POST` | `/api/simulation/resume` | — |
-| `POST` | `/api/simulation/reset` | — |
-| `POST` | `/api/simulation/speed` | `{intervalMs}` |
+| POST | `/api/simulation/start` | — |
+| POST | `/api/simulation/pause` | — |
+| POST | `/api/simulation/resume` | — |
+| POST | `/api/simulation/reset` | — |
+| POST | `/api/simulation/speed` | `{intervalMs}` |
 
 ### History and Vehicle Search
 
 | Method | Endpoint | Body / Query |
 |---|---|---|
-| `GET` | `/api/history/traffic` | `?roadID=&limit=` |
-| `GET` | `/api/history/signal` | `?roadID=&limit=` |
-| `GET` | `/api/history/emergency` | `?roadID=` |
-| `GET` | `/api/vehicle/find` | `?roadID=&vehicleID=` |
-| `GET` | `/api/queue` | `?roadID=` |
-| `POST` | `/api/queue` | `{roadID, vehicleID, type}` |
+| GET | `/api/history/traffic` | `?roadID=&limit=` |
+| GET | `/api/history/signal` | `?roadID=&limit=` |
+| GET | `/api/history/emergency` | `?roadID=` |
+| GET | `/api/vehicle/find` | `?roadID=&vehicleID=` |
+| GET | `/api/queue` | `?roadID=` |
+| POST | `/api/queue` | `{roadID, vehicleID, type}` |
 
 The vehicle search endpoint returns a 1-based queue position.
 
@@ -671,7 +638,7 @@ All API errors follow a common JSON structure:
 | 400 | Invalid input |
 | 404 | Unknown road or endpoint |
 | 405 | Incorrect HTTP method |
-| 409 | Duplicate road or simulation already in that state |
+| 409 | Duplicate road or invalid state transition |
 | 500 | Unexpected server error |
 | 503 | Storage unavailable |
 
@@ -725,7 +692,7 @@ Example response:
 
 ## 🧪 Testing
 
-The project includes automated test suites for Traffic Intelligence, Database Management, and System Integration.
+The project includes automated testing for the Traffic Intelligence, Database Management and System Integration modules.
 
 ### Run Tests
 
@@ -736,12 +703,14 @@ make test
 ### Test Results
 
 ```text
---- MEMBER 1: Traffic Intelligence ---   58 / 58 tests passed.
---- MEMBER 2: Database ---               72 / 72 tests passed.
---- MEMBER 4: Integration ---            76 / 76 tests passed.
+--- Traffic Intelligence Tests ---       58 / 58 passed.
+--- Database Tests ---                   72 / 72 passed.
+--- Integration Tests ---                76 / 76 passed.
+
+Total: 206 / 206 automated assertions passed.
 ```
 
-**206 automated assertions passed.**
+**Total: 206 automated assertions.**
 
 The project also supports compilation with:
 
@@ -755,17 +724,15 @@ AddressSanitizer and UndefinedBehaviorSanitizer testing can be run using:
 make asan
 ```
 
-### Five Integration Scenarios
-
-The integration test suite covers five important system scenarios.
+### Integration Test Scenarios
 
 | Scenario | Expected Behaviour |
 |---|---|
-| 1 — Normal traffic | Exactly one road receives GREEN and the decision includes a reason |
-| 2 — Emergency | An ambulance on the quietest road outranks a 75-vehicle jam |
-| 3 — Traffic increase | Adding 500 vehicles changes the selected road |
-| 4 — Waiting time | Multiple roads receive GREEN over repeated cycles, preventing starvation |
-| 5 — New emergency | An emergency interrupts normal selection, and control returns after completion |
+| Normal traffic | Exactly one road receives GREEN and a reason is provided |
+| Emergency | An ambulance on the quietest road receives priority over a heavily congested road |
+| Traffic increase | Adding vehicles changes the selected road when appropriate |
+| Waiting time | Multiple roads receive GREEN over repeated cycles, preventing starvation |
+| New emergency | Emergency traffic interrupts normal selection and control returns after completion |
 
 ### Error Paths Covered
 
@@ -780,18 +747,24 @@ The tests also cover:
 - Unknown roads
 - Unknown endpoints
 - Incorrect HTTP methods
-- Path traversal (`/../etc/passwd`)
+- Path traversal
 - Oversized request bodies
 - Writes after disconnect
-- Pausing a simulation that is not running
+- Invalid simulation operations
 
 ### Testing Note
 
-The 206 assertions are distributed across three automated test suites.
+The 206 automated assertions are distributed across three test suites:
 
-The Member 1 `test/` directory contains 16 programs. Three of these programs use assertions, while the remaining programs produce output for manual inspection. The Database and Integration test suites also use assertions throughout.
+- Traffic Intelligence: 58 assertions
+- Database Management: 72 assertions
+- System Integration: 76 assertions
 
-The SQLite backend has a separate testing limitation documented in `database/README_SQLITE.md`.
+The Traffic Intelligence test directory contains 16 programs. Three programs use automated assertions, while the remaining programs provide output for manual inspection.
+
+The Database and Integration test suites also contain automated assertions.
+
+The frontend is not included in the 206 automated assertion count. The SQLite backend has a separate testing limitation documented in `database/README_SQLITE.md`.
 
 ---
 
@@ -800,7 +773,7 @@ The SQLite backend has a separate testing limitation documented in `database/REA
 ```text
 adaptive-traffic-management-system/
 │
-├── include/                     MEMBER 1 — Traffic Intelligence
+├── include/                     Traffic Intelligence
 │   ├── road.h
 │   ├── vehicle.h
 │   ├── queue.h
@@ -813,7 +786,7 @@ adaptive-traffic-management-system/
 │   ├── TrafficSimulation.h/.cpp
 │   └── trafficintelligence.h
 │
-├── database/                    MEMBER 2 — Database
+├── database/                    Database Management
 │   ├── Database.h/.cpp
 │   ├── FileStorage.h/.cpp
 │   ├── SqliteStorage.h/.cpp
@@ -825,12 +798,12 @@ adaptive-traffic-management-system/
 │   ├── database_test.cpp
 │   └── README_SQLITE.md
 │
-├── frontend/                    MEMBER 3 — Frontend
+├── frontend/                    Frontend Development
 │   ├── index.html
 │   ├── styles.css
 │   └── app.js
 │
-├── integration/                 MEMBER 4 — Integration
+├── integration/                 System Integration and API
 │   ├── traffic.h/.cpp
 │   ├── Integration.h/.cpp
 │   ├── API.h/.cpp
@@ -841,9 +814,9 @@ adaptive-traffic-management-system/
 │   └── integration_test.cpp
 │
 ├── src/
-│   └── main.cpp                 Member 1 standalone console demo
+│   └── main.cpp
 │
-├── test/                        Member 1 tests (16 programs)
+├── test/
 │
 ├── main.cpp                     Integrated system entry point
 ├── Makefile                     Linux / macOS build
@@ -855,57 +828,51 @@ adaptive-traffic-management-system/
 
 ## 🧩 Design Decisions
 
-### 1. No Inheritance for Vehicle
+### 1. Vehicle Representation
 
 `VehicleQueue` stores vehicles by value.
 
 Using derived objects in a container of base objects can cause object slicing, where the derived portion is discarded.
 
-The only property that varies by vehicle type is represented by a boolean, so inheritance is unnecessary for this design.
+The vehicle-type difference is represented using a boolean, so inheritance is unnecessary for this design.
 
 ### 2. VehicleQueue Is Non-Copyable
 
 `VehicleQueue` owns dynamically allocated nodes using `new`.
 
-A compiler-generated copy would duplicate the pointers, causing two queues to share the same nodes. Both destructors could then attempt to free the same memory, resulting in a double-free error.
+A compiler-generated copy would duplicate pointers, potentially causing two queues to share the same nodes and resulting in double-free errors.
 
 ### 3. Roads and Queues in Parallel Arrays
 
 `Road` objects can be copied into the heap and report arrays, but `VehicleQueue` cannot be copied.
 
-Keeping roads and queues in separate parallel arrays allows copyable and non-copyable data to be managed appropriately.
+Keeping roads and queues in separate parallel arrays allows both types of data to be managed appropriately.
 
-### 4. Hash Table Stores an Index, Not a Road
+### 4. Hash Table Stores an Index
 
-The hash table stores a road index instead of an entire `Road` object.
+The hash table stores a road index instead of a complete `Road` object.
 
-Storing complete road objects would create duplicate copies and require additional synchronization whenever a road changes.
-
-The index provides efficient lookup while maintaining the original road data in one location.
+This avoids maintaining duplicate copies of road data and allows efficient lookup.
 
 ### 5. Hash Table Rebuild After removeRoad()
 
 Removing a road shifts subsequent roads to different array positions.
 
-This invalidates the indexes stored in the hash table.
+This invalidates indexes stored in the hash table.
 
-Therefore, `removeRoad()` rebuilds the hash table to ensure that lookups continue returning the correct roads.
+Therefore, `removeRoad()` rebuilds the hash table to maintain correct lookups.
 
 ### 6. Linear Search Over the Vehicle Queue
 
-The vehicle queue maintains arrival order, not sorted vehicle IDs.
+The vehicle queue maintains arrival order rather than sorted vehicle IDs.
 
-Binary search requires sorted data, so applying it to this queue could return incorrect results.
-
-Linear search is the appropriate choice for finding a vehicle by ID.
+Binary search requires sorted data, so linear search is appropriate for finding a vehicle by ID.
 
 ### 7. Merge Sort Instead of Quick Sort
 
-The road list is sorted repeatedly as priorities change.
-
 Merge sort guarantees O(n log n) time complexity in all cases and is stable.
 
-It provides predictable sorting performance for priority-ordered reports.
+It provides predictable sorting performance for priority-ordered road reports.
 
 ### 8. One Selection Path
 
@@ -915,7 +882,7 @@ It provides predictable sorting performance for priority-ordered reports.
 TrafficManager::selectNextRoad()
 ```
 
-Maintaining one selection path ensures that the same input produces consistent decisions throughout the application.
+Maintaining one selection path ensures consistent traffic decisions throughout the application.
 
 ### 9. Demand Based on Reported Counts
 
@@ -929,9 +896,7 @@ Using queue contents alone would make these roads invisible to the selection alg
 
 The project provides FileStorage and SqliteStorage behind the common `IStorage` interface.
 
-FileStorage supports the default build without additional dependencies, while SQLite provides an alternative database backend.
-
-This design separates database implementation details from the rest of the system.
+This separates database implementation details from the rest of the application.
 
 ### 11. Single-Threaded HTTP Server
 
@@ -943,7 +908,7 @@ Since `TrafficManager` is not thread-safe, this avoids concurrent modifications 
 
 FileStorage uses `0x1F` as a separator between fields.
 
-This avoids conflicts with ordinary user-entered road names and eliminates the need for additional escaping rules for the supported text format.
+This avoids conflicts with ordinary user-entered road names and simplifies the storage format.
 
 ---
 
@@ -956,7 +921,7 @@ Although the project provides a complete traffic management simulation, several 
 - There is no coordination between adjacent traffic junctions.
 - Priority weights are based on design decisions rather than trained models or measured real-world traffic data.
 - There are no real-time timed GREEN or YELLOW phases.
-- One `processTrafficCycle()` represents a simulation step rather than an actual signal duration.
+- `processTrafficCycle()` represents a simulation step rather than an actual signal duration.
 - `TrafficManager` prints progress messages to `cout`, which also appear in the server log.
 - The HTTP server is single-threaded.
 - HTTPS and persistent HTTP keep-alive connections are not supported.
@@ -966,20 +931,22 @@ Although the project provides a complete traffic management simulation, several 
 
 ## 👥 Team Members
 
-The Adaptive Traffic Management System was developed collaboratively by all four team members. Each member contributed to the development and implementation of their assigned module.
+The Adaptive Traffic Management System was developed collaboratively by all four team members.
 
-| Member | Module | Responsibility |
+Each member was responsible for designing, developing and implementing their respective module. All four contributions were integrated into the final application.
+
+| Member | Assigned Module | Contribution |
 |---|---|---|
-| **Member 1** | **Traffic Intelligence** | Traffic priority calculation, road selection, Data Structures and Algorithms, Object-Oriented Programming, vehicle queues, and traffic simulation |
-| **Member 2** | **Database Management** | Database design, storage management, FileStorage, SQLite integration, repositories, data persistence, and traffic history |
-| **Member 3** | **Frontend Development** | Dashboard design, user interface, traffic visualization, road controls, emergency controls, and frontend validation |
-| **Member 4** | **System Integration and API** | Shared data contract, REST API, HTTP server, request handling, error handling, synchronization, and module integration |
+| **Member 1** | **Traffic Intelligence** | Traffic algorithms, data structures, priority calculation, road selection, vehicle queues and traffic simulation |
+| **Member 2** | **Database Management** | Database design, storage implementation, repositories, data persistence and traffic history |
+| **Member 3** | **Frontend Development** | Dashboard development, user interface, traffic visualization, road controls and frontend validation |
+| **Member 4** | **System Integration and API** | Shared interfaces, REST API, HTTP server, request handling, error handling and integration of all modules |
 
 ### Collaborative Contribution
 
-All four members contributed to building the complete Adaptive Traffic Management System.
+All four members completed their respective responsibilities and contributed to the development of the complete Adaptive Traffic Management System.
 
-Each member worked on a dedicated module, and the modules were integrated to create a unified application combining:
+The final application combines:
 
 - Data Structures and Algorithms
 - Object-Oriented Programming
@@ -989,13 +956,13 @@ Each member worked on a dedicated module, and the modules were integrated to cre
 - REST API Integration
 - Software Testing
 
-The final system demonstrates how independently developed modules can work together as one complete software application.
+The four modules work together as one unified application. Each member's contribution is an essential part of the completed project.
 
 ---
 
 ## 📄 License
 
-Developed for academic coursework.
+Developed collaboratively for academic coursework.
 
 ---
 
