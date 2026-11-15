@@ -62,3 +62,22 @@ string PriorityManager::getPriorityReason(
 
     return "Normal traffic priority";
 }
+
+int PriorityManager::greenDurationFor(const Road& road) const {
+    int needed = road.getVehicleCount() * SECONDS_PER_VEHICLE;
+
+    if (needed < MIN_GREEN_SECONDS) {
+        return MIN_GREEN_SECONDS;
+    }
+    if (needed > MAX_GREEN_SECONDS) {
+        return MAX_GREEN_SECONDS;
+    }
+    return needed;
+}
+
+int PriorityManager::vehiclesServedIn(int greenSeconds) const {
+    if (greenSeconds <= 0) {
+        return 0;
+    }
+    return greenSeconds/SECONDS_PER_VEHICLE ;
+}
