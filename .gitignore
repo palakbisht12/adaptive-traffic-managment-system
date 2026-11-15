@@ -1,0 +1,24 @@
+# Compiled binaries
+*.exe
+*.o
+*.out
+traffic_server
+traffic_demo
+tests_m1
+tests_m2
+tests_m4
+build_*_asan
+
+# Runtime data
+traffic_data/
+traffic_data.db
+test_db_data/
+test_integration_data/
+
+# SQLite amalgamation (download separately, see database/README_SQLITE.md)
+sqlite3.c
+sqlite3.h
+
+# Editor
+.vscode/settings.json
+.DS_Store

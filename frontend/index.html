@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Adaptive Traffic Control // Live Intersection</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2312161a'/%3E%3Ccircle cx='8' cy='4.5' r='2.2' fill='%23e05a4e'/%3E%3Ccircle cx='8' cy='11.5' r='2.2' fill='%232fa060'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div id="offlineBanner" class="offline-banner" hidden>
+    <strong>Backend not reachable.</strong>
+    Start the server, then open <code>http://127.0.0.1:8080/</code> —
+    <code>make run</code> on Linux/macOS, <code>build.bat run</code> on Windows.
+    <span class="banner-note">
+      Opening index.html straight from the folder will
+      not work: the dashboard has no traffic logic of its own, by design.
+    </span>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <h1>Adaptive Traffic Control</h1>
+      <span class="brand-sub"></span>
+    </div>
+
+    <nav class="viewtabs">
+      <button class="vtab is-active" data-view="live">Live View</button>
+      <button class="vtab" data-view="manage">Roads</button>
+      <button class="vtab" data-view="history">History</button>
+    </nav>
+
+    <div class="status-cluster">
+      <span id="connection" class="pill pill-wait">connecting</span>
+      <span id="storage" class="pill pill-muted">storage —</span>
+      <span id="cycleBadge" class="pill pill-muted">cycle 0</span>
+    </div>
+  </header>
+
+  <main id="view-live" class="view is-active">
+    <section class="stage">
+      <h2 class="stage-title">Intersection — Live View</h2>
+
+      <div class="canvas-wrap">
+        <svg id="junction"
+             viewBox="0 0 640 640"
+             preserveAspectRatio="xMidYMid meet"
+             role="img"
+             aria-label="Top-down view of the intersection">
+
+          <rect x="0" y="0" width="640" height="640" class="ground" />
+
+          <g class="blocks">
+            <rect x="24" y="24" width="228" height="228" class="block" />
+            <rect x="388" y="24" width="228" height="228" class="block" />
+            <rect x="24" y="388" width="228" height="228" class="block" />
+            <rect x="388" y="388" width="228" height="228" class="block" />
+            <g id="scenery"></g>
+          </g>
+
+          <rect x="252" y="0" width="136" height="640" class="road" />
+          <rect x="0" y="252" width="640" height="136" class="road" />
+
+          <g class="kerbs">
+            <line x1="252" y1="0" x2="252" y2="252" />
+            <line x1="388" y1="0" x2="388" y2="252" />
+            <line x1="252" y1="388" x2="252" y2="640" />
+            <line x1="388" y1="388" x2="388" y2="640" />
+            <line x1="0" y1="252" x2="252" y2="252" />
+            <line x1="0" y1="388" x2="252" y2="388" />
+            <line x1="388" y1="252" x2="640" y2="252" />
+            <line x1="388" y1="388" x2="640" y2="388" />
+          </g>
+
+          <g class="centreline">
+            <line x1="320" y1="0" x2="320" y2="252" />
+            <line x1="320" y1="388" x2="320" y2="640" />
+            <line x1="0" y1="320" x2="252" y2="320" />
+            <line x1="388" y1="320" x2="640" y2="320" />
+          </g>
+
+          <g class="lanedash">
+            <line x1="286" y1="0" x2="286" y2="246" />
+            <line x1="354" y1="0" x2="354" y2="246" />
+            <line x1="286" y1="394" x2="286" y2="640" />
+            <line x1="354" y1="394" x2="354" y2="640" />
+            <line x1="0" y1="286" x2="246" y2="286" />
+            <line x1="0" y1="354" x2="246" y2="354" />
+            <line x1="394" y1="286" x2="640" y2="286" />
+            <line x1="394" y1="354" x2="640" y2="354" />
+          </g>
+
+          <rect x="252" y="252" width="136" height="136" class="junction-box" />
+
+          <g id="crossings" class="crossing"></g>
+
+          <g class="stopline">
+            <line x1="254" y1="246" x2="318" y2="246" />
+            <line x1="322" y1="394" x2="386" y2="394" />
+            <line x1="394" y1="254" x2="394" y2="318" />
+            <line x1="246" y1="322" x2="246" y2="386" />
+          </g>
+
+          <g id="cars"></g>
+          <g id="lights"></g>
+          <g id="roadLabels"></g>
+        </svg>
+      </div>
+
+      <div class="legend">
+        <span><i class="sw sw-green"></i>green</span>
+        <span><i class="sw sw-red"></i>red</span>
+        <span><i class="sw sw-car"></i>vehicle</span>
+        <span><i class="sw sw-emg"></i>emergency</span>
+        <span class="legend-note">Approaches map to N, E, S, W in road order.</span>
+      </div>
+    </section>
+
+    <aside class="sidepanel">
+      <section class="pcard">
+        <h2>Current Priority</h2>
+        <div id="priorityBox" class="priority-empty">
+          <p class="muted">No decision yet.</p>
+        </div>
+      </section>
+
+      <section class="pcard">
+        <h2>Road Controls</h2>
+        <div id="roadControls" class="road-controls">
+          <p class="muted">Loading…</p>
+        </div>
+      </section>
+
+      <section class="pcard">
+        <h2>Simulation</h2>
+        <p class="muted tiny">
+          state <strong id="simState">STOPPED</strong>
+          · one cycle serves <strong>one vehicle</strong> on the green road
+        </p>
+
+        <div class="btnrow">
+          <button id="btnStart" class="btn btn-go">Start</button>
+          <button id="btnPause" class="btn">Pause</button>
+          <button id="btnResume" class="btn">Resume</button>
+          <button id="btnReset" class="btn btn-warn">Reset</button>
+        </div>
+
+        <div class="btnrow">
+          <button id="btnStep" class="btn">Step</button>
+          <button id="btnRandom" class="btn">Randomise</button>
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label for="speedSelect">Cycle speed</label>
+          <select id="speedSelect">
+            <option value="2500">Slow — 2.5s per cycle</option>
+            <option value="1200" selected>Normal — 1.2s</option>
+            <option value="500">Fast — 0.5s</option>
+          </select>
+        </div>
+
+        <div class="btnrow">
+          <button id="btnClearAll" class="btn">Empty all roads</button>
+          <button id="btnOneEach" class="btn">1 vehicle each</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <main id="view-manage" class="view">
+    <div class="grid2">
+      <section class="pcard">
+        <h2>Add Road</h2>
+
+        <div class="field">
+          <label for="addID">Road ID</label>
+          <input id="addID" type="text" maxlength="20" placeholder="R105" />
+        </div>
+
+        <div class="field">
+          <label for="addName">Road name</label>
+          <input id="addName" type="text" maxlength="60" placeholder="Mall Road" />
+        </div>
+
+        <div class="fieldrow">
+          <div class="field">
+            <label for="addVehicles">Vehicles</label>
+            <input id="addVehicles" type="number" min="0" value="0" />
+          </div>
+
+          <div class="field">
+            <label for="addDensity">Density %</label>
+            <input id="addDensity" type="number" min="0" max="100" value="0" />
+          </div>
+
+          <div class="field">
+            <label for="addWaiting">Waiting s</label>
+            <input id="addWaiting" type="number" min="0" value="0" />
+          </div>
+        </div>
+
+        <button id="btnAddRoad" class="btn btn-go">Add road</button>
+      </section>
+
+      <section class="pcard">
+        <h2>Update Traffic</h2>
+
+        <div class="field">
+          <label for="trafficSelect">Road</label>
+          <select id="trafficSelect"></select>
+        </div>
+
+        <div class="fieldrow">
+          <div class="field">
+            <label for="addVeh">Add vehicles</label>
+            <input id="addVeh" type="number" min="0" value="0" />
+          </div>
+
+          <div class="field">
+            <label for="removeVeh">Remove vehicles</label>
+            <input id="removeVeh" type="number" min="0" value="0" />
+          </div>
+        </div>
+
+        <div class="fieldrow">
+          <div class="field">
+            <label for="newDensity">Density % <span class="muted">(blank keeps)</span></label>
+            <input id="newDensity" type="number" min="0" max="100" placeholder="keep" />
+          </div>
+
+          <div class="field">
+            <label for="newWaiting">Waiting s <span class="muted">(blank keeps)</span></label>
+            <input id="newWaiting" type="number" min="0" placeholder="keep" />
+          </div>
+        </div>
+
+        <button id="btnUpdateTraffic" class="btn btn-go">Apply</button>
+      </section>
+
+      <section class="pcard">
+        <h2>Remove Road</h2>
+
+        <div class="field">
+          <label for="removeSelect">Road</label>
+          <select id="removeSelect"></select>
+        </div>
+
+        <button id="btnRemoveRoad" class="btn btn-warn">Remove road</button>
+      </section>
+
+      <section class="pcard">
+        <h2>Road Details</h2>
+
+        <div class="field">
+          <label for="detailSelect">Road</label>
+          <select id="detailSelect"></select>
+        </div>
+
+        <pre id="roadDetail" class="detail">Select a road.</pre>
+
+        <h2 class="spaced">Vehicle Queue</h2>
+
+        <div class="field">
+          <label for="queueFilter">Search this queue</label>
+          <input id="queueFilter"
+                 type="text"
+                 placeholder="type an ID or a type, e.g. AMB or Bus" />
+        </div>
+
+        <div id="queueList" class="queue-list">
+          <p class="muted tiny">Select a road.</p>
+        </div>
+
+        <p id="vehicleResult" class="muted tiny"></p>
+
+        <h2 class="spaced">Put a Vehicle on This Road</h2>
+
+        <div class="fieldrow">
+          <div class="field">
+            <label for="newVehicleID">Vehicle ID</label>
+            <input id="newVehicleID"
+                   type="text"
+                   maxlength="30"
+                   placeholder="CAR-17" />
+          </div>
+
+          <div class="field">
+            <label for="newVehicleType">Type</label>
+            <select id="newVehicleType">
+              <option>Normal</option>
+              <option>Bus</option>
+              <option>Truck</option>
+              <option>Ambulance</option>
+              <option>Fire Brigade</option>
+              <option>Police</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="btnQueueVehicle" class="btn btn-go">Add to queue</button>
+      </section>
+    </div>
+  </main>
+
+  <main id="view-history" class="view">
+    <section class="pcard">
+      <h2>History</h2>
+
+      <div class="fieldrow">
+        <div class="field">
+          <label for="histKind">Type</label>
+          <select id="histKind">
+            <option value="traffic">Traffic</option>
+            <option value="signal">Signal changes</option>
+            <option value="emergency">Emergency events</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="histRoad">Road</label>
+          <select id="histRoad">
+            <option value="">All roads</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="histLimit">Limit</label>
+          <input id="histLimit" type="number" min="1" max="200" value="25" />
+        </div>
+      </div>
+
+      <button id="btnLoadHistory" class="btn">Load history</button>
+
+      <div class="tablewrap">
+        <table id="historyTable">
+          <thead>
+            <tr>
+              <th>—</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="muted">Nothing loaded.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="toastArea" class="toast-area" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
